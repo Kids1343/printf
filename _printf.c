@@ -1,92 +1,48 @@
-#include "holberton.h"
-#include <stdlib.h>
 #include <stdio.h>
-
+#include <stdarg.h>
+#include <stdlib.h>
+#include "holberton.h"
 /**
- * printIdentifiers - prints special characters
- * @next: character after the %
- * @arg: argument for the indentifier
- * Return: the number of characters printed
- * (excluding the null byte used to end output to strings)
- */
-
-int printIdentifiers(char next, va_list arg)
-{
-	int functsIndex;
-
-	identifierStruct functs[] = {
-		{"c", print_char},
-		{"s", print_str},
-		{"d", print_int},
-		{"i", print_int},
-		{"u", print_unsigned},
-		{"b", print_unsignedToBinary},
-		{"o", print_oct},
-		{"x", print_hex},
-		{"X", print_HEX},
-		{"S", print_STR},
-		{NULL, NULL}
-	};
-
-	for (functsIndex = 0; functs[functsIndex].indentifier != NULL; functsIndex++)
-	{
-		if (functs[functsIndex].indentifier[0] == next)
-			return (functs[functsIndex].printer(arg));
-	}
-	return (0);
-}
-
-/**
- * _printf - mimic printf from stdio
- * Description: produces output according to a format
- * write output to stdout, the standard output stream
- * @format: character string composed of zero or more directives
+ * _printf - prints according to format
+ * @format: The given format
  *
- * Return: the number of characters printed
- * (excluding the null byte used to end output to strings)
- * return -1 for incomplete identifier error
+ * Return: On success 1.
+ * On error, -1 is returned.
  */
-
 int _printf(const char *format, ...)
 {
-	unsigned int i;
-	int identifierPrinted = 0, charPrinted = 0;
-	va_list arg;
+	va_list params;
+	printer_t current_printer;
+	int i = 0, putchar_flag = 1, length = 0;
 
-	va_start(arg, format);
-	if (format == NULL)
+	if ((format == NULL) || (format[0] == '%' && !format[1]))
 		return (-1);
-
-	for (i = 0; format[i] != '\0'; i++)
+	va_start(params, format);
+	while (format[i] != '\0')
 	{
 		if (format[i] != '%')
-		{
-			_putchar(format[i]);
-			charPrinted++;
-			continue;
-		}
-		if (format[i + 1] == '%')
-		{
-			_putchar('%');
-			charPrinted++;
-			i++;
-			continue;
-		}
-		if (format[i + 1] == '\0')
-			return (-1);
-
-		identifierPrinted = printIdentifiers(format[i + 1], arg);
-		if (identifierPrinted == -1 || identifierPrinted != 0)
-			i++;
-		if (identifierPrinted > 0)
-			charPrinted += identifierPrinted;
-
-		if (identifierPrinted == 0)
-		{
-			_putchar('%');
-			charPrinted++;
-		}
+			if (putchar_flag)
+				length += _putchar(format[i]);
+			else
+			{
+				current_printer = select_printer(format[i]);
+				if (current_printer.format != '*')
+					length += current_printer.func(&params);
+				else
+					length += _putchar('%') + _putchar(format[i]);
+				putchar_flag = 1;
+			}
+		else
+			if (putchar_flag)
+				putchar_flag = 0;
+			else
+			{
+				/* ToDO: Add condition for blanks */
+				length += _putchar(format[i]);
+				putchar_flag = 1;
+			}
+		i++;
 	}
-	va_end(arg);
-	return (charPrinted);
+	va_end(params);
+	return (length);
 }
