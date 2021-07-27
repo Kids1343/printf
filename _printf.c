@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-_printf.c/**
+/**
  * printIdentifiers - prints special characters
  * @next: character after the %
  * @arg: argument for the indentifier
